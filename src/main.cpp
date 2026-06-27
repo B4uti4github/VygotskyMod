@@ -24,15 +24,15 @@ static void saveVState(GJGameLevel* lvl, float x, float y, float rot, float perc
 }
 
 static bool hasVState(GJGameLevel* lvl) {
-    return Mod::get()->hasSavedValue(vkey(lvl, "sp_x"));
+    return Mod::get()->getSavedValue<float>(vkey(lvl, "pb"), 0.f) > 0.f;
 }
 
 static void clearVState(GJGameLevel* lvl) {
-    Mod::get()->deleteSavedValue(vkey(lvl, "sp_x"));
-    Mod::get()->deleteSavedValue(vkey(lvl, "sp_y"));
-    Mod::get()->deleteSavedValue(vkey(lvl, "sp_rot"));
-    Mod::get()->deleteSavedValue(vkey(lvl, "sp_percent"));
-    Mod::get()->deleteSavedValue(vkey(lvl, "pb"));
+    Mod::get()->setSavedValue(vkey(lvl, "sp_x"), 0.f);
+    Mod::get()->setSavedValue(vkey(lvl, "sp_y"), 0.f);
+    Mod::get()->setSavedValue(vkey(lvl, "sp_rot"), 0.f);
+    Mod::get()->setSavedValue(vkey(lvl, "sp_percent"), 0.f);
+    Mod::get()->setSavedValue(vkey(lvl, "pb"), 0.f);
 }
 
 class $modify(VPlayLayer, PlayLayer) {
@@ -48,27 +48,26 @@ class $modify(VPlayLayer, PlayLayer) {
     bool init(GJGameLevel* level, bool useReplay, bool dontKnow) {
         if (!PlayLayer::init(level, useReplay, dontKnow)) return false;
 
-        auto f = m_fields;
-        f->initialized = true;
+        m_fields->initialized = true;
 
         if (m_level->isPlatformer()) return true;
 
-        f->vygotskyPB = Mod::get()->getSavedValue<float>(vkey(level, "pb"), 0.f);
-        f->currentAttemptBest = 0.f;
-        f->wasJumpBuffered = false;
-        f->passedPB = false;
-        f->vygotskyLabel = nullptr;
+        m_fields->vygotskyPB = Mod::get()->getSavedValue<float>(vkey(level, "pb"), 0.f);
+        m_fields->currentAttemptBest = 0.f;
+        m_fields->wasJumpBuffered = false;
+        m_fields->passedPB = false;
+        m_fields->vygotskyLabel = nullptr;
 
         if (isVygotskyEnabled() && hasVState(level)) {
-            float sp = Mod::get()->getSavedValue<float>(vkey(level, "sp_percent"), f->vygotskyPB);
-            f->vygotskyLabel = CCLabelBMFont::create(
+            float sp = Mod::get()->getSavedValue<float>(vkey(level, "sp_percent"), m_fields->vygotskyPB);
+            m_fields->vygotskyLabel = CCLabelBMFont::create(
                 fmt::format("Vygotsky: {:.1f}%", sp).c_str(),
                 "bigFont.fnt"
             );
-            if (f->vygotskyLabel) {
-                f->vygotskyLabel->setScale(0.35f);
-                f->vygotskyLabel->setPosition({CCDirector::get()->getWinSize().width / 2.f, 28.f});
-                this->addChild(f->vygotskyLabel);
+            if (m_fields->vygotskyLabel) {
+                m_fields->vygotskyLabel->setScale(0.35f);
+                m_fields->vygotskyLabel->setPosition({CCDirector::get()->getWinSize().width / 2.f, 28.f});
+                this->addChild(m_fields->vygotskyLabel);
             }
         }
 
@@ -76,8 +75,6 @@ class $modify(VPlayLayer, PlayLayer) {
     }
 
     void resetLevel() {
-        auto f = m_fields;
-
         if (!m_level->isPlatformer() && isVygotskyEnabled() && m_isPracticeMode && hasVState(m_level)) {
             float x = Mod::get()->getSavedValue<float>(vkey(m_level, "sp_x"), 0.f);
             float y = Mod::get()->getSavedValue<float>(vkey(m_level, "sp_y"), 0.f);
@@ -93,9 +90,9 @@ class $modify(VPlayLayer, PlayLayer) {
 
         PlayLayer::resetLevel();
 
-        f->currentAttemptBest = 0.f;
-        f->passedPB = false;
-        f->wasJumpBuffered = false;
+        m_fields->currentAttemptBest = 0.f;
+        m_fields->passedPB = false;
+        m_fields->wasJumpBuffered = false;
     }
 
     void update(float dt) {
@@ -105,21 +102,20 @@ class $modify(VPlayLayer, PlayLayer) {
         if (m_level->isPlatformer()) return;
         if (!m_player1) return;
 
-        auto f = m_fields;
-        if (f->passedPB) return;
+        if (m_fields->passedPB) return;
 
         float percent = static_cast<float>(PlayLayer::getCurrentPercentInt());
 
-        if (percent > f->currentAttemptBest) {
-            f->currentAttemptBest = percent;
+        if (percent > m_fields->currentAttemptBest) {
+            m_fields->currentAttemptBest = percent;
         }
 
         bool isJumpBuffered = m_player1->m_jumpBuffered;
-        bool justJumped = isJumpBuffered && !f->wasJumpBuffered;
-        f->wasJumpBuffered = isJumpBuffered;
+        bool justJumped = isJumpBuffered && !m_fields->wasJumpBuffered;
+        m_fields->wasJumpBuffered = isJumpBuffered;
 
-        if (percent > f->vygotskyPB && justJumped) {
-            f->passedPB = true;
+        if (percent > m_fields->vygotskyPB && justJumped) {
+            m_fields->passedPB = true;
 
             saveVState(
                 m_level,
@@ -128,11 +124,11 @@ class $modify(VPlayLayer, PlayLayer) {
                 m_player1->getRotation(),
                 percent
             );
-            f->vygotskyPB = percent;
+            m_fields->vygotskyPB = percent;
             Mod::get()->setSavedValue(vkey(m_level, "pb"), percent);
 
-            if (f->vygotskyLabel) {
-                f->vygotskyLabel->setString(fmt::format("Vygotsky: {:.1f}%", percent).c_str());
+            if (m_fields->vygotskyLabel) {
+                m_fields->vygotskyLabel->setString(fmt::format("Vygotsky: {:.1f}%", percent).c_str());
             }
 
             auto flash = CCLayerColor::create({255, 255, 255, 90});
@@ -148,16 +144,14 @@ class $modify(VPlayLayer, PlayLayer) {
     }
 
     void destroyPlayer(PlayerObject* player, GameObject* obj) {
-        auto f = m_fields;
-
-        if (!m_level->isPlatformer() && isVygotskyEnabled() && f->currentAttemptBest > f->vygotskyPB) {
-            f->vygotskyPB = f->currentAttemptBest;
-            Mod::get()->setSavedValue(vkey(m_level, "pb"), f->currentAttemptBest);
+        if (!m_level->isPlatformer() && isVygotskyEnabled() && m_fields->currentAttemptBest > m_fields->vygotskyPB) {
+            m_fields->vygotskyPB = m_fields->currentAttemptBest;
+            Mod::get()->setSavedValue(vkey(m_level, "pb"), m_fields->currentAttemptBest);
         }
 
-        f->currentAttemptBest = 0.f;
-        f->passedPB = false;
-        f->wasJumpBuffered = false;
+        m_fields->currentAttemptBest = 0.f;
+        m_fields->passedPB = false;
+        m_fields->wasJumpBuffered = false;
 
         PlayLayer::destroyPlayer(player, obj);
     }
