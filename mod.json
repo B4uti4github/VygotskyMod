@@ -1,0 +1,17 @@
+{
+	"geode": "5.7.1",
+	"gd": {
+		"win": "2.2081",
+		"android": "2.2081",
+		"mac": "2.2081",
+		"ios": "2.2081"
+	},
+	"id": "b4uti4gd.vygotsky",
+	"name": "Vygotsky",
+	"version": "1.0.0",
+	"developer": "b4uti4gd",
+	"description": "An Vygotsky Practice mod for Geometry Dash.",
+	"dependencies": {
+		"geode.node-ids": ">=v1.23.3"
+	}
+}
