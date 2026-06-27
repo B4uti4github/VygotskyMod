@@ -43,12 +43,21 @@ class $modify(VPlayLayer, PlayLayer) {
         bool wasJumpBuffered = false;
         bool passedPB = false;
         CCLabelBMFont* vygotskyLabel = nullptr;
+        StartPosObject* ourStartPos = nullptr;
     };
+
+    ~VPlayLayer() {
+        if (m_fields->ourStartPos) {
+            m_fields->ourStartPos->release();
+            m_fields->ourStartPos = nullptr;
+        }
+    }
 
     bool init(GJGameLevel* level, bool useReplay, bool dontKnow) {
         if (!PlayLayer::init(level, useReplay, dontKnow)) return false;
 
         m_fields->initialized = true;
+        m_fields->ourStartPos = nullptr;
 
         if (m_level->isPlatformer()) return true;
 
@@ -75,17 +84,21 @@ class $modify(VPlayLayer, PlayLayer) {
     }
 
     void resetLevel() {
+        if (m_fields->ourStartPos) {
+            m_fields->ourStartPos->release();
+            m_fields->ourStartPos = nullptr;
+        }
+
         if (!m_level->isPlatformer() && isVygotskyEnabled() && m_isPracticeMode && hasVState(m_level)) {
             float x = Mod::get()->getSavedValue<float>(vkey(m_level, "sp_x"), 0.f);
             float y = Mod::get()->getSavedValue<float>(vkey(m_level, "sp_y"), 0.f);
             float rot = Mod::get()->getSavedValue<float>(vkey(m_level, "sp_rot"), 0.f);
 
-            auto sp = StartPosObject::create();
-            if (sp) {
-                sp->setPosition({x, y});
-                sp->setRotation(rot);
-                m_startPosObject = sp;
-            }
+            m_fields->ourStartPos = StartPosObject::create();
+            m_fields->ourStartPos->retain();
+            m_fields->ourStartPos->setPosition({x, y});
+            m_fields->ourStartPos->setRotation(rot);
+            m_startPosObject = m_fields->ourStartPos;
         }
 
         PlayLayer::resetLevel();
