@@ -13,5 +13,8 @@
 	"description": "An automatic startpos switcher",
 	"dependencies": {
 		"geode.node-ids": ">=v1.23.3"
+	},
+	"links": {
+		"source": "https://github.com/B4uti4github/VygotskyMod"
 	}
 }
