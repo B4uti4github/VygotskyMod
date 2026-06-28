@@ -1,2 +1,4 @@
 # Vygotsky
-An mod for Practice levels with the Vygotsky method called ZPD (aka Zone of Proximal Development)
+An automatic startpos switcher that selects the nearest startpos before the player's death position.
+
+Credits to capeling for the original Startpos Switcher.

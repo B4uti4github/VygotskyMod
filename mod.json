@@ -10,7 +10,7 @@
 	"name": "Vygotsky",
 	"version": "1.0.0",
 	"developer": "b4uti4gd",
-	"description": "An Vygotsky Practice mod for Geometry Dash.",
+	"description": "An automatic startpos switcher",
 	"dependencies": {
 		"geode.node-ids": ">=v1.23.3"
 	}
