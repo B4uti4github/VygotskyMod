@@ -10,6 +10,7 @@ class $modify(PlayLayer) {
         int m_startPosIdx = 0;
         bool m_canSwitch = true;
         float m_deathX = 0.f;
+        bool m_firstStart = true;
     };
 
     void addObject(GameObject* obj) {
@@ -77,5 +78,17 @@ class $modify(PlayLayer) {
         PlayLayer::destroyPlayer(player, object);
         
         updateStartPos();
+    }
+
+    void resetLevel() {
+        if (m_fields->m_firstStart) {
+            m_fields->m_firstStart = false;
+            this->setStartPosObject(nullptr);
+            m_isTestMode = false;
+            this->updateTestModeLabel();
+            m_currentCheckpoint = nullptr;
+        }
+
+        PlayLayer::resetLevel();
     }
 };
