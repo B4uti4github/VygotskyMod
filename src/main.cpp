@@ -10,7 +10,6 @@ class $modify(PlayLayer) {
         int m_startPosIdx = 0;
         bool m_canSwitch = true;
         float m_deathX = 0.f;
-        bool m_firstStart = true;
     };
 
     void addObject(GameObject* obj) {
@@ -30,11 +29,10 @@ class $modify(PlayLayer) {
         std::sort(f->m_startPosObjects.begin(), f->m_startPosObjects.end(),
             [](auto a, auto b) { return a->getPositionX() < b->getPositionX(); });
 
-        if (m_startPosObject) {
-            auto it = std::find(f->m_startPosObjects.begin(), f->m_startPosObjects.end(), m_startPosObject);
-            if (it != f->m_startPosObjects.end())
-                f->m_startPosIdx = (int)std::distance(f->m_startPosObjects.begin(), it) + 1;
-        }
+        this->setStartPosObject(nullptr);
+        f->m_startPosIdx = 0;
+        m_isTestMode = false;
+        this->updateTestModeLabel();
     }
 
     void updateStartPos() {
@@ -57,7 +55,7 @@ class $modify(PlayLayer) {
         m_currentCheckpoint = nullptr;
 
         StartPosObject* target = (best > 0)
-            ? static_cast<StartPosObject*>(f->m_startPosObjects[best - 1].data())
+            ? static_cast<StartPosObject*>((GameObject*)f->m_startPosObjects[best - 1])
             : nullptr;
 
         this->setStartPosObject(target);
@@ -78,17 +76,5 @@ class $modify(PlayLayer) {
         PlayLayer::destroyPlayer(player, object);
         
         updateStartPos();
-    }
-
-    void resetLevel() {
-        if (m_fields->m_firstStart) {
-            m_fields->m_firstStart = false;
-            this->setStartPosObject(nullptr);
-            m_isTestMode = false;
-            this->updateTestModeLabel();
-            m_currentCheckpoint = nullptr;
-        }
-
-        PlayLayer::resetLevel();
     }
 };
