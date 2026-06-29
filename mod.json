@@ -8,7 +8,7 @@
 	},
 	"id": "b4uti4gd.vygotsky",
 	"name": "Vygotsky",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"developer": "b4uti4gd",
 	"description": "An automatic startpos switcher",
 	"dependencies": {
