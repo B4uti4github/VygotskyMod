@@ -7,11 +7,14 @@ using namespace geode::prelude;
 class $modify(PlayLayer) {
     struct Fields {
         std::vector<geode::Ref<GameObject>> m_startPosObjects;
+        int m_startPosIdx = 0;
+        bool m_canSwitch = true;
         float m_deathX = -1.f;
     };
 
     void addObject(GameObject* obj) {
         PlayLayer::addObject(obj);
+
         if (!obj || obj->m_objectID != 31) return;
 
         auto* startPos = static_cast<StartPosObject*>(obj);
@@ -27,30 +30,48 @@ class $modify(PlayLayer) {
             [](auto a, auto b) { return a->getPositionX() < b->getPositionX(); });
 
         this->setStartPosObject(nullptr);
+        f->m_startPosIdx = 0;
         m_isTestMode = false;
         this->updateTestModeLabel();
     }
 
-    void resetLevel() {
+    void updateStartPos() {
         auto* f = m_fields.self();
+        if (!f->m_canSwitch || f->m_startPosObjects.empty() || f->m_deathX < 0.f) return;
 
-        if (f->m_deathX >= 0.f && !f->m_startPosObjects.empty()) {
-            StartPosObject* best = nullptr;
-            for (auto& ref : f->m_startPosObjects) {
-                if (ref->getPositionX() < f->m_deathX)
-                    best = static_cast<StartPosObject*>((GameObject*)ref);
-                else
-                    break;
-            }
+        f->m_canSwitch = false;
 
-            if (f->m_startPosObject != best) {
-                this->setStartPosObject(best);
-                m_isTestMode = (best != nullptr);
-                this->updateTestModeLabel();
-            }
+        int best = 0;
+        for (int i = 0; i < (int)f->m_startPosObjects.size(); i++) {
+            if (f->m_startPosObjects[i]->getPositionX() < f->m_deathX)
+                best = i + 1;
+            else
+                break;
         }
 
-        PlayLayer::resetLevel();
+        if (best == f->m_startPosIdx) {
+            f->m_canSwitch = true;
+            return;
+        }
+
+        f->m_startPosIdx = best;
+        m_isTestMode = (best != 0);
+        this->updateTestModeLabel();
+        m_currentCheckpoint = nullptr;
+
+        StartPosObject* target = (best > 0)
+            ? static_cast<StartPosObject*>((GameObject*)f->m_startPosObjects[best - 1])
+            : nullptr;
+
+        this->setStartPosObject(target);
+
+        if (m_isPracticeMode)
+            this->resetLevelFromStart();
+
+        this->resetLevel();
+        this->startMusic();
+
+        f->m_canSwitch = true;
     }
 
     void destroyPlayer(PlayerObject* player, GameObject* object) {
@@ -58,5 +79,7 @@ class $modify(PlayLayer) {
             m_fields->m_deathX = player->getPositionX();
 
         PlayLayer::destroyPlayer(player, object);
+
+        updateStartPos();
     }
 };
