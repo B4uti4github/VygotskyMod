@@ -43,7 +43,7 @@ class $modify(PlayLayer) {
                     break;
             }
 
-            if (m_startPos != best) {
+            if (f->m_startPosObject != best) {
                 this->setStartPosObject(best);
                 m_isTestMode = (best != nullptr);
                 this->updateTestModeLabel();
